@@ -2,7 +2,8 @@
   "name": "maskmeister",
   "displayName": "MaskMeister",
   "description": "Mask my code",
-  "version": "0.0.4",
+  "icon": "images/maskmeister.png",
+  "version": "0.0.5",
   "publisher": "MaskMeister",
   "author": {
     "name": "Henrik Röschmann",
