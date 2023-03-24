@@ -7,7 +7,7 @@ import path = require("path");
 export function activate(context: vscode.ExtensionContext) {
   // Register the maskCode command
   const maskCodeDisposable = vscode.commands.registerCommand(
-    "masked-code.maskCode",
+    "maskmeister.maskCode",
     () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
@@ -36,7 +36,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register the unmaskCode command
   const unmaskCodeDisposable = vscode.commands.registerCommand(
-    "masked-code.unmaskCode",
+    "maskmeister.unmaskCode",
     () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
@@ -68,10 +68,10 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register the editKeywords command
   const editKeywordsDisposable = vscode.commands.registerCommand(
-    "masked-code.editKeywords",
+    "maskmeister.editKeywords",
     () => {
       const keywordsFilePath = vscode.workspace
-        .getConfiguration("masked-code")
+        .getConfiguration("maskmeister")
         .get<string>("keywordsFilePath", "keywords.json");
       vscode.window
         .showTextDocument(vscode.Uri.file(keywordsFilePath), {
@@ -80,14 +80,7 @@ export function activate(context: vscode.ExtensionContext) {
           preview: false,
         })
         .then((editor) => {
-          editor.edit((editBuilder) => {
-            const document = editor.document;
-            const editRange = new vscode.Range(
-              document.positionAt(0),
-              document.positionAt(document.getText().length)
-            );
-            editBuilder.replace(editRange, "");
-          });
+          // No need to create an edit here; just open the file.
         });
     }
   );
@@ -102,7 +95,7 @@ export function activate(context: vscode.ExtensionContext) {
           vscode.CodeActionKind.QuickFix
         );
         maskAction.command = {
-          command: "masked-code.maskCode",
+          command: "maskmeister.maskCode",
           title: "Mask code",
           tooltip: "Mask code",
           arguments: [],
@@ -113,7 +106,7 @@ export function activate(context: vscode.ExtensionContext) {
           vscode.CodeActionKind.QuickFix
         );
         unmaskAction.command = {
-          command: "masked-code.unmaskCode",
+          command: "maskmeister.unmaskCode",
           title: "Unmask code",
           tooltip: "Unmask code",
           arguments: [],
@@ -138,10 +131,10 @@ function getKeywordMap(): Map<string, string> {
     ["secret", "**"],
   ]);
   const configKeywordMap = vscode.workspace
-    .getConfiguration("masked-code")
+    .getConfiguration("maskmeister")
     .get<{ [key: string]: string }>("keywords");
   const keywordsFilePath = vscode.workspace
-    .getConfiguration("masked-code")
+    .getConfiguration("maskmeister")
     .get<string>("keywordsFilePath");
   let customKeywordMap = new Map();
   try {

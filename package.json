@@ -2,7 +2,7 @@
   "name": "maskmeister",
   "displayName": "MaskMeister",
   "description": "Mask my code",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "publisher": "MaskMeister",
   "author": {
     "name": "Henrik Röschmann",
@@ -20,14 +20,14 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:masked-code.maskCode",
-    "onCommand:masked-code.unmaskCode",
-    "onCommand:masked-code.editKeywords"
+    "onCommand:maskmeister.maskCode",
+    "onCommand:maskmeister.unmaskCode",
+    "onCommand:maskmeister.editKeywords"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
-      "masked-code.keywordsFilePath": {
+      "maskmeister.keywordsFilePath": {
         "type": "string",
         "default": "keywords.json",
         "description": "The path to the keywords file to use for masking/unmasking."
@@ -35,15 +35,15 @@
     },
     "commands": [
       {
-        "command": "masked-code.maskCode",
+        "command": "maskmeister.maskCode",
         "title": "Mask Code"
       },
       {
-        "command": "masked-code.unmaskCode",
+        "command": "maskmeister.unmaskCode",
         "title": "Unmask Code"
       },
       {
-        "command": "masked-code.editKeywords",
+        "command": "maskmeister.editKeywords",
         "title": "Edit Masked Code Keywords"
       }
     ],
@@ -54,7 +54,7 @@
         ],
         "title": "Mask Code",
         "command": {
-          "command": "masked-code.maskCode",
+          "command": "maskmeister.maskCode",
           "title": "Mask Code"
         },
         "kind": "quickfix"
@@ -65,7 +65,7 @@
         ],
         "title": "Unmask Code",
         "command": {
-          "command": "masked-code.unmaskCode",
+          "command": "maskmeister.unmaskCode",
           "title": "Unmask Code"
         },
         "kind": "quickfix"

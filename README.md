@@ -26,14 +26,32 @@ MaskMeister is a Visual Studio Code extension that allows you to mask and unmask
    - Press `Ctrl+Shift+P` and run the `Edit Masked Code Keywords` command
    - Edit the `keywords.json` file to add or remove keyword/placeholder pairs
 
+
+### Example keywords.json
+```json
 {
     "ExampleToReplace": "ReplacementValue",
     "SomeOtherValue": "SomeOtherReplacementValue"
 }
+```
 
 ## Configuration
 
 You can configure the keywords and the path to the keywords file in your VS Code settings. Open your settings and search for "masked-code" to find the available options.
+
+## Add Configuration to User Settings
+
+To add the configuration to your user settings in Visual Studio Code, include the following line:
+
+Press `Ctrl+Shift+P` and run the `user settings (json)` command
+
+Add the desired key-value pair using the correct JSON syntax. For example, to add the "maskmeister.keywordsFilePath" setting, you would add the following line:
+
+```json
+"maskmeister.keywordsFilePath": "C:\\dev\\keywords.json",
+```
+
+Make sure to adjust the file path according to your system's directory structure.
 
 ## Contributing
 
