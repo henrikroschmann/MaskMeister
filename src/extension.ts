@@ -30,9 +30,6 @@ export function activate(context: vscode.ExtensionContext) {
           case "partial":
             regex = new RegExp(`${keyword}`, "gi");
             break;
-          case "whole-word":
-            regex = new RegExp(`\\b${keyword}\\w*\\b`, "gi");
-            break;
         }
         maskedCode = maskedCode.replace(regex, dummyValue);
       }
@@ -75,9 +72,23 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       // Default keywords to write if the file doesn't exist
-      const defaultKeywords = {
-        mySecretPassword: "AlteredPasswordSecret",
-      };
+      const defaultKeywords = [
+        {
+          key: "mySecretPassword",
+          value: "AlteredPasswordSecret",
+          matchType: "exact",
+        },
+        {
+          key: "anotherSecret",
+          value: "AnotherAlteredSecret",
+          matchType: "partial",
+        },
+        {
+          key: "yetAnotherSecret",
+          value: "YetAnotherAlteredSecret",
+          matchType: "exact",
+        },
+      ];
 
       // Check if the file exists
       if (!fs.existsSync(keywordsFilePath)) {

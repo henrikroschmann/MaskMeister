@@ -45,7 +45,7 @@ Assume we have a `keywords.json` file with the following content:
   {
     "key": "yetAnotherSecret",
     "value": "YetAnotherAlteredSecret",
-    "matchType": "whole-word"
+    "matchType": "exact"
   }
 ]
 ```
@@ -64,16 +64,15 @@ After running the `maskCode` command, the sentences would be altered as follows.
 
 1. "My name is Sam and my password is AlteredPasswordSecret." (Exact match of mySecretPassword is replaced)
 2. "I am a huge fan of AnotherAlteredSecret and I talk about it all the time." (All instances of anotherSecret are replaced, even if they are part of another word)
-3. "My YetAnotherAlteredSecret is that I love chocolate." (Only whole-word match of yetAnotherSecret is replaced)
+3. "My YetAnotherAlteredSecret is that I love chocolate." (Exact match of yetAnotherSecret is replaced)
 4. "The best part of the day is when I can sit down and write in peace." (This sentence remains unchanged as it does not contain any keywords)
 5. "I use the keyword AlteredPasswordSecret to access my private files." (Exact match of mySecretPassword is replaced)
 6. "I keep all my important information under AnotherAlteredSecret." (All instances of anotherSecret are replaced, even if they are part of another word)
-7. "Everyone should have a YetAnotherAlteredSecret in their lives." (Only whole-word match of yetAnotherSecret is replaced)
+7. "Everyone should have a YetAnotherAlteredSecret in their lives." (Exact match of yetAnotherSecret is replaced)
 
 Please remember to replace the text within `keywords.json` and the sentences with your own content and keywords.
 
-Note: In the example above, the "matchType" parameter is used to control how the keywords are matched. An "exact" match means the keyword is replaced only when it appears exactly as is. A "partial" match means the keyword is replaced even when it is part of another word. A "whole-word" match means the keyword is replaced only when it is a whole word (i.e., it is not part of a larger word).
-
+Note: In the example above, the "matchType" parameter is used to control how the keywords are matched. An "exact" match means the keyword is replaced only when it appears exactly as is. A "partial" match means the keyword is replaced even when it is part of another word.
 
 ## Configuration
 
