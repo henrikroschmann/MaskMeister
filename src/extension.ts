@@ -2,13 +2,13 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import * as fs from "fs";
-import path = require("path");
+import * as path from "path";
 
 export function activate(context: vscode.ExtensionContext) {
   // Register the maskCode command
   const maskCodeDisposable = vscode.commands.registerCommand(
     "maskmeister.maskCode",
-    () => {
+    async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
         return;
@@ -19,8 +19,21 @@ export function activate(context: vscode.ExtensionContext) {
       let maskedCode = originalCode;
 
       const keywordMap = getKeywordMap();
-      for (const [keyword, dummyValue] of keywordMap.entries()) {
-        const regex = new RegExp(`\\b${keyword}\\b`, "gi");
+      for (const [keyword, [dummyValue, matchType]] of (
+        await keywordMap
+      ).entries()) {
+        let regex = new RegExp(""); // Initialize with a default value
+        switch (matchType) {
+          case "exact":
+            regex = new RegExp(`\\b${keyword}\\b`, "gi");
+            break;
+          case "partial":
+            regex = new RegExp(`${keyword}`, "gi");
+            break;
+          case "whole-word":
+            regex = new RegExp(`\\b${keyword}\\w*\\b`, "gi");
+            break;
+        }
         maskedCode = maskedCode.replace(regex, dummyValue);
       }
 
@@ -34,10 +47,59 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const editKeywordsCommand = vscode.commands.registerCommand(
+    "maskmeister.editKeywords",
+    () => {
+      // The path to the keywords file
+      const keywordsFilePath = vscode.workspace
+        .getConfiguration("maskmeister")
+        .get("keywordsFilePath") as string;
+
+      // Check if the keywordsFilePath has been set in the settings
+      if (!keywordsFilePath) {
+        // If it hasn't been set, show a message to the user and ask them to set it
+        vscode.window
+          .showInformationMessage(
+            "Please specify the location of the keywords file in the MaskMeister settings.",
+            "Open Settings"
+          )
+          .then((selection) => {
+            if (selection === "Open Settings") {
+              vscode.commands.executeCommand(
+                "workbench.action.openSettings",
+                "maskmeister.keywordsFilePath"
+              );
+            }
+          });
+        return; // Don't execute the command if the keywordsFilePath hasn't been set
+      }
+
+      // Default keywords to write if the file doesn't exist
+      const defaultKeywords = {
+        mySecretPassword: "AlteredPasswordSecret",
+      };
+
+      // Check if the file exists
+      if (!fs.existsSync(keywordsFilePath)) {
+        // If the file doesn't exist, create it
+        fs.writeFileSync(
+          keywordsFilePath,
+          JSON.stringify(defaultKeywords, null, 2),
+          "utf-8"
+        );
+      }
+
+      // Now you can open the file in a text editor
+      vscode.workspace.openTextDocument(keywordsFilePath).then((doc) => {
+        vscode.window.showTextDocument(doc);
+      });
+    }
+  );
+
   // Register the unmaskCode command
   const unmaskCodeDisposable = vscode.commands.registerCommand(
     "maskmeister.unmaskCode",
-    () => {
+    async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
         return;
@@ -48,11 +110,12 @@ export function activate(context: vscode.ExtensionContext) {
       let originalCode = maskedCode;
 
       const keywordMap = getKeywordMap();
-      for (const [keyword, dummyValue] of keywordMap.entries()) {
+      for (const [keyword, dummyValue] of (await keywordMap).entries()) {
         const regex = new RegExp(
-          `\\b${dummyValue.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}\\b`,
+          `\\b${dummyValue[0].replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}\\b`,
           "gi"
         );
+
         originalCode = originalCode.replace(regex, keyword);
       }
 
@@ -63,25 +126,6 @@ export function activate(context: vscode.ExtensionContext) {
         );
         editBuilder.replace(fullRange, originalCode);
       });
-    }
-  );
-
-  // Register the editKeywords command
-  const editKeywordsDisposable = vscode.commands.registerCommand(
-    "maskmeister.editKeywords",
-    () => {
-      const keywordsFilePath = vscode.workspace
-        .getConfiguration("maskmeister")
-        .get<string>("keywordsFilePath", "keywords.json");
-      vscode.window
-        .showTextDocument(vscode.Uri.file(keywordsFilePath), {
-          viewColumn: vscode.ViewColumn.One,
-          preserveFocus: true,
-          preview: false,
-        })
-        .then((editor) => {
-          // No need to create an edit here; just open the file.
-        });
     }
   );
 
@@ -120,49 +164,75 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     maskCodeDisposable,
     unmaskCodeDisposable,
-    editKeywordsDisposable,
+    editKeywordsCommand,
     codeActionsDisposable
   );
 }
 
-function getKeywordMap(): Map<string, string> {
-  const defaultKeywordMap = new Map([
-    ["password", "****"],
-    ["secret", "**"],
-  ]);
-  const configKeywordMap = vscode.workspace
-    .getConfiguration("maskmeister")
-    .get<{ [key: string]: string }>("keywords");
-  const keywordsFilePath = vscode.workspace
-    .getConfiguration("maskmeister")
-    .get<string>("keywordsFilePath");
-  let customKeywordMap = new Map();
-  try {
-    let customKeywords;
-    if (keywordsFilePath) {
-      customKeywords = fs.readFileSync(keywordsFilePath, "utf8");
+interface KeywordItem {
+  key: string;
+  value: string;
+  matchType: string;
+}
+
+async function getKeywordMap(): Promise<Map<string, [string, string]>> {
+  const config = vscode.workspace.getConfiguration("maskmeister");
+  let keywordsFilePath = config.get<string>("keywordsFilePath");
+
+  if (!keywordsFilePath) {
+    const result = await vscode.window.showInputBox({
+      prompt: "Please enter the location for the keywords file",
+      value: "keywords.json",
+    });
+
+    if (result !== undefined) {
+      keywordsFilePath = result;
+      config.update(
+        "keywordsFilePath",
+        keywordsFilePath,
+        vscode.ConfigurationTarget.Global
+      );
     } else {
-      const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-      if (!workspaceFolder) {
-        console.error("No workspace folder found.");
-        return defaultKeywordMap;
-      }
-      const filePath = path.join(workspaceFolder.uri.fsPath, "keywords.json");
-      customKeywords = fs.readFileSync(filePath, "utf8");
+      return new Map();
     }
-    customKeywordMap = new Map(Object.entries(JSON.parse(customKeywords)));
+  }
+
+  let customKeywordMap = new Map<string, [string, string]>();
+  try {
+    fs.mkdirSync(path.dirname(keywordsFilePath), { recursive: true });
+    if (!fs.existsSync(keywordsFilePath)) {
+      const defaultKeywordArray: KeywordItem[] = [];
+      fs.writeFileSync(keywordsFilePath, JSON.stringify(defaultKeywordArray));
+    }
+
+    const customKeywords: KeywordItem[] = JSON.parse(
+      fs.readFileSync(keywordsFilePath, "utf8")
+    );
+    customKeywordMap = new Map<string, [string, string]>(
+      customKeywords.map(({ key, value, matchType }) => [
+        key,
+        [value, matchType],
+      ])
+    );
   } catch (err) {
     // Error reading custom keywords file
     console.error(err);
   }
-  return new Map([
-    ...defaultKeywordMap,
-    ...(configKeywordMap ? Object.entries(configKeywordMap) : []),
+
+  const configKeywordMap = config.get<{
+    [key: string]: { value: string; matchType: string };
+  }>("keywords");
+  const configKeywordArray: [string, [string, string]][] = configKeywordMap
+    ? Object.entries(configKeywordMap).map(([key, { value, matchType }]) => [
+        key,
+        [value, matchType],
+      ])
+    : [];
+
+  return new Map<string, [string, string]>([
     ...customKeywordMap,
+    ...configKeywordArray,
   ]);
 }
-
-  
-  
 
 export function deactivate() {}

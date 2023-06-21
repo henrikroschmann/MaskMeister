@@ -3,7 +3,7 @@
   "displayName": "MaskMeister",
   "description": "Mask my code",
   "icon": "images/maskmeister.png",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "MaskMeister",
   "author": {
     "name": "Henrik Röschmann",
@@ -28,24 +28,27 @@
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
-      "maskmeister.keywordsFilePath": {
-        "type": "string",
-        "default": "keywords.json",
-        "description": "The path to the keywords file to use for masking/unmasking."
+      "title": "MaskMeister",
+      "properties": {
+        "maskmeister.keywordsFilePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the keywords file"
+        }
       }
     },
     "commands": [
       {
         "command": "maskmeister.maskCode",
-        "title": "Mask Code"
+        "title": "MaskMester: Mask Code"
       },
       {
         "command": "maskmeister.unmaskCode",
-        "title": "Unmask Code"
+        "title": "MaskMester: Unmask Code"
       },
       {
         "command": "maskmeister.editKeywords",
-        "title": "Edit Masked Code Keywords"
+        "title": "MaskMester: Edit Keywords"
       }
     ],
     "codeActions": [
